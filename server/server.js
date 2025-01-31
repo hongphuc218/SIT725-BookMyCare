@@ -8,12 +8,9 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect('mongodb+srv://BookMyCare:BMCPassword@bookmycare.w4x7e.mongodb.net/?retryWrites=true&w=majority&appName=BookMyCare', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-    .then(() => console.log('✅ Connected to MongoDB'))
-    .catch((err) => console.error('❌ MongoDB connection error:', err));
+mongoose.connect('mongodb+srv://BookMyCare:BMCPassword@bookmycare.w4x7e.mongodb.net/?retryWrites=true&w=majority&appName=BookMyCare')
+    .then(() => console.log("Connected to MongoDB"))
+    .catch((err) => console.error("MongoDB connection error:", err))
 
 // Import routes (Ensure all use `/api`)
 app.use('/api/auth', require('../routes/authRoutes'));
