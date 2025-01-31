@@ -16,9 +16,9 @@ mongoose.connect('mongodb+srv://BookMyCare:BMCPassword@bookmycare.w4x7e.mongodb.
     .catch((err) => console.error('❌ MongoDB connection error:', err));
 
 // Import routes (Ensure all use `/api`)
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/appointments', require('./routes/appointmentRoutes'));
+app.use('/api/auth', require('../routes/authRoutes'));
+app.use('/api/users', require('../routes/userRoutes'));
+app.use('/api/appointments', require('../routes/appointmentRoutes'));
 
 // Set a consistent port (Frontend & Backend should use the same)
 const PORT = 5000;  // ✅ Now using 5000 consistently
