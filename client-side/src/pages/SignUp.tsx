@@ -1,179 +1,145 @@
-import React, { useState } from 'react'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function SignUp() {
-  const [isDoctorForm, setIsDoctorForm] = useState(true);
+  const navigate = useNavigate();
+  const [role, setRole] = useState("user"); // Default to 'user'
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    specialty: "",
+    dob: "",
+  });
+  const [error, setError] = useState("");
+
+  // Handle input changes dynamically
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Submit form data to backend
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    // Validate required fields
+    if (!formData.name || !formData.email || !formData.password || (role === "doctor" && !formData.specialty) || (role === "user" && !formData.dob)) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    const userData = {
+      role,
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      ...(role === "doctor" ? { specialty: formData.specialty } : { dob: formData.dob }),
+    };
+
+    try {
+      await axios.post("http://localhost:5000/api/signup", userData);
+      navigate("/login"); // Redirect to login page after signup
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Signup failed. Please try again.");
+    }    
+  };
 
   return (
-    <main className="flex items-center justify-center h-custom">
-      <div className="bg-white shadow-lg rounded-lg p-8 max-w-lg w-full border border-accent">
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-primary py-5">Sign Up an Account</h1>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
+        <h1 className="text-3xl font-bold text-primary text-center">Sign Up</h1>
 
-        {/* Divider */}
-        <div className="flex items-center my-5">
-          <div className="border-t border-secondary w-full"></div>
-          <p className="text-secondary mx-4">AS</p>
-          <div className="border-t border-secondary w-full"></div>
-        </div>
-
-        {/* Tab for Selecting Role */}
-        <div className="flex justify-center gap-5 my-5">
+        {/* Role Selection */}
+        <div className="flex justify-center gap-4 my-5">
           <button
-            onClick={() => setIsDoctorForm(true)}
-            className={`${
-              isDoctorForm ? 'btn btn-primary' : 'btn btn-accent'
-            } px-6 py-2 rounded-full border-2 hover:bg-lightgreyblue`}
+            onClick={() => setRole("doctor")}
+            className={`px-5 py-2 rounded-full ${role === "doctor" ? "bg-primary text-white" : "bg-gray-200 text-secondary"}`}
           >
             Doctor
           </button>
           <button
-            onClick={() => setIsDoctorForm(false)}
-            className={`${
-              !isDoctorForm ? 'btn btn-primary' : 'btn btn-accent'
-            } px-6 py-2 rounded-full border-2 hover:bg-lightgreyblue`}
+            onClick={() => setRole("user")}
+            className={`px-5 py-2 rounded-full ${role === "user" ? "bg-primary text-white" : "bg-gray-200 text-secondary"}`}
           >
             Client
           </button>
         </div>
 
-        {/* Sign Up Form */}
-        {isDoctorForm ? (
-          <form className="flex flex-col gap-5">
-            <div>
-              <label htmlFor="doctorName" className="block text-secondary">
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="doctorName"
-                className="input input-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
-                placeholder="John Doe"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="doctorEmail" className="block text-secondary">
-                Email
-              </label>
-              <input
-                type="email"
-                id="doctorEmail"
-                className="input input-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
-                placeholder="doctor@example.com"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="doctorSpecialty" className="block text-secondary">
-                Specialty
-              </label>
-              <select
-                id="doctorSpecialty"
-                className="select select-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
-                required
-              >
-                <option value="" disabled selected>
-                  Select your specialty
-                </option>
-                <option value="cardiology">Cardiology</option>
-                <option value="neurology">Neurology</option>
-                <option value="dermatology">Dermatology</option>
-                <option value="orthopedics">Orthopedics</option>
-                <option value="pediatrics">Pediatrics</option>
-                <option value="general">General Medicine</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="doctorPassword" className="block text-secondary">
-                Password
-              </label>
-              <input
-                type="password"
-                id="doctorPassword"
-                className="input input-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              className="btn btn-primary w-full mt-5 rounded-full"
-            >
-              Sign Up as Doctor
-            </button>
-          </form>
-        ) : (
-          <form className="flex flex-col gap-5">
-            <div>
-              <label htmlFor="clientName" className="block text-secondary">
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="clientName"
-                className="input input-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
-                placeholder="Jane Doe"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="clientEmail" className="block text-secondary">
-                Email
-              </label>
-              <input
-                type="email"
-                id="clientEmail"
-                className="input input-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
-                placeholder="client@example.com"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="clientDOB" className="block text-secondary">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                id="clientDOB"
-                className="input input-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="clientPassword" className="block text-secondary">
-                Password
-              </label>
-              <input
-                type="password"
-                id="clientPassword"
-                className="input input-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              className="btn btn-primary w-full mt-5 rounded-full"
-            >
-              Sign Up as Client
-            </button>
-          </form>
-        )}
+        {/* Signup Form */}
+        <form onSubmit={handleSignup} className="flex flex-col gap-4">
+          <input
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            value={formData.name}
+            onChange={handleChange}
+            className="input input-bordered w-full rounded-lg border-secondary text-secondary placeholder-secondary"
+            required
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            className="input input-bordered w-full rounded-lg border-secondary text-secondary placeholder-secondary"
+            required
+          />
+          
+          {/* Conditional Fields for Doctor and Client */}
+          {role === "doctor" ? (
+            <input
+              type="text"
+              name="specialty"
+              placeholder="Specialty"
+              value={formData.specialty}
+              onChange={handleChange}
+              className="input input-bordered w-full rounded-lg border-secondary text-secondary placeholder-secondary"
+              required
+            />
+          ) : (
+            <input
+              type="date"
+              name="dob"
+              value={formData.dob}
+              onChange={handleChange}
+              className="input input-bordered w-full rounded-lg border-secondary text-secondary placeholder-secondary"
+              required
+            />
+          )}
 
-        {/* Log In Link */}
-        <div className="text-center mt-6">
-          <p className="text-secondary">
-            Already have an account?{' '}
-            <a href="/login" className="text-primary font-semibold hover:underline">
-              Log In
-            </a>
-          </p>
-        </div>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password (min 6 chars)"
+            value={formData.password}
+            onChange={handleChange}
+            className="input input-bordered w-full rounded-lg border-secondary text-secondary placeholder-secondary"
+            required
+          />
+
+          {/* Error Message */}
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+          <button type="submit" className="btn btn-primary w-full mt-3 rounded-lg text-lg">
+            Sign Up
+          </button>
+        </form>
+
+        {/* Redirect to Login */}
+        <p className="text-secondary text-center mt-4">
+          Already have an account?{" "}
+          <a href="/login" className="text-primary font-semibold hover:underline">
+            Log In
+          </a>
+        </p>
       </div>
-    </main>
+    </div>
   );
-};
-
-
+}

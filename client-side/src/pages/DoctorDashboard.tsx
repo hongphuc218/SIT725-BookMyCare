@@ -1,137 +1,136 @@
-import React, { useState } from 'react'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "../auth/UserContext";
+import axios from "axios";
+
+interface Appointment {
+  _id: string;
+  patientName: string;
+  date: string;
+  time: string;
+}
+
+interface Schedule {
+  availableDays: string[];
+  availableTimes: string[];
+}
 
 export default function DoctorDashboard() {
-    const [activeTab, setActiveTab] = useState('Bookings');
+  const { user } = useUser();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("bookings");
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [schedule, setSchedule] = useState<Schedule>({ availableDays: [], availableTimes: [] });
 
-    // Dynamic content based on active tab
-    const renderContent = () => {
-      switch (activeTab) {
-        case 'Bookings':
-          return (
-            <div>
-              <h2 className="text-xl font-semibold text-secondary mb-4">Client Bookings</h2>
-              <table className="table w-full">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Client Name</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { id: 1, clientName: 'Jane Doe', date: '2025-02-01', time: '10:00 AM' },
-                    { id: 2, clientName: 'Mark Johnson', date: '2025-02-02', time: '02:00 PM' },
-                    { id: 3, clientName: 'Alice Brown', date: '2025-02-03', time: '09:30 AM' },
-                  ].map((booking) => (
-                    <tr key={booking.id}>
-                      <td>{booking.id}</td>
-                      <td>{booking.clientName}</td>
-                      <td>{booking.date}</td>
-                      <td>{booking.time}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          );
-        case 'Schedule':
-          return (
-            <div>
-              <h2 className="text-xl font-semibold text-secondary mb-4">Update Schedule</h2>
-              <form className="flex flex-col gap-4">
-                <div className="flex gap-4">
-                  <input
-                    type="text"
-                    className="input input-bordered w-full rounded-full"
-                    placeholder="Day (e.g., Monday)"
-                    required
-                  />
-                  <input
-                    type="time"
-                    className="input input-bordered w-full rounded-full"
-                    required
-                  />
-                  <input
-                    type="time"
-                    className="input input-bordered w-full rounded-full"
-                    required
-                  />
-                </div>
-                <button type="submit" className="btn btn-primary rounded-full">
-                  Update Schedule
-                </button>
-              </form>
-            </div>
-          );
-        case 'Settings':
-          return (
-            <div>
-              <h2 className="text-xl font-semibold text-secondary mb-4">Edit Personal Data</h2>
-              <form className="flex flex-col gap-4">
-                <input
-                  type="text"
-                  className="input input-bordered w-full rounded-full"
-                  placeholder="Full Name"
-                  required
-                />
-                <input
-                  type="email"
-                  className="input input-bordered w-full rounded-full"
-                  placeholder="Email"
-                  required
-                />
-                <input
-                  type="text"
-                  className="input input-bordered w-full rounded-full"
-                  placeholder="Specialty"
-                  required
-                />
-                <button type="submit" className="btn btn-primary rounded-full">
-                  Save Changes
-                </button>
-              </form>
-            </div>
-          );
-        default:
-          return <p>Select a task from the sidebar.</p>;
-      }
-    };
-  
-    return (
-      <div className="min-h-screen flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-neutral text-white flex flex-col p-4">
-          <h1 className="text-2xl font-bold mb-6">Doctor Dashboard</h1>
-          <nav className="flex flex-col gap-4">
-            <button
-              onClick={() => setActiveTab('Bookings')}
-              className={`btn ${activeTab === 'Bookings' ? 'btn-primary' : 'btn-ghost'}`}
-            >
-              Bookings
-            </button>
-            <button
-              onClick={() => setActiveTab('Schedule')}
-              className={`btn ${activeTab === 'Schedule' ? 'btn-primary' : 'btn-ghost'}`}
-            >
-              Schedule
-            </button>
-            <button
-              onClick={() => setActiveTab('Settings')}
-              className={`btn ${activeTab === 'Settings' ? 'btn-primary' : 'btn-ghost'}`}
-            >
-              Settings
-            </button>
-          </nav>
-        </aside>
-  
-        {/* Main Content */}
-        <main className="flex-grow p-6 bg-accent">
-          <div className="bg-white shadow-lg rounded-lg p-8 max-w-4xl mx-auto">
-            {renderContent()}
+  // Redirect non-doctors away
+  useEffect(() => {
+    if (!user || user.role !== "doctor") {
+      navigate("/login");
+    } else {
+      fetchDoctorData();
+    }
+  }, [user]);
+
+  // Fetch doctor's bookings and schedule from the backend
+  const fetchDoctorData = async () => {
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/doctors/${user?.email}/appointments`);
+      setAppointments(data.appointments);
+      setSchedule(data.schedule);
+    } catch (error) {
+      console.error("Failed to fetch doctor data:", error);
+    }
+  };
+
+  // Handle schedule update
+  const updateSchedule = async () => {
+    try {
+      await axios.put(`http://localhost:5000/api/doctors/${user?.email}/schedule`, schedule);
+      alert("Schedule updated successfully!");
+    } catch (error) {
+      console.error("Error updating schedule:", error);
+    }
+  };
+
+  // Handle appointment cancellation
+  const cancelAppointment = async (appointmentId: string) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/appointments/${appointmentId}`);
+      setAppointments(appointments.filter((appt) => appt._id !== appointmentId));
+      alert("Appointment canceled successfully!");
+    } catch (error) {
+      console.error("Error canceling appointment:", error);
+    }
+  };
+
+  if (!user) return <p>Loading...</p>;
+
+  return (
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <aside className="w-1/4 bg-gray-100 p-6 border-r">
+        <h2 className="text-xl font-bold mb-4">Doctor Dashboard</h2>
+        <ul>
+          <li className={`cursor-pointer p-2 ${activeTab === "bookings" ? "bg-primary text-white" : ""}`} onClick={() => setActiveTab("bookings")}>
+            My Bookings
+          </li>
+          <li className={`cursor-pointer p-2 ${activeTab === "schedule" ? "bg-primary text-white" : ""}`} onClick={() => setActiveTab("schedule")}>
+            My Schedule
+          </li>
+          <li className={`cursor-pointer p-2 ${activeTab === "settings" ? "bg-primary text-white" : ""}`} onClick={() => setActiveTab("settings")}>
+            Profile Settings
+          </li>
+        </ul>
+      </aside>
+
+      {/* Main Content */}
+      <div className="w-3/4 p-6">
+        {activeTab === "bookings" && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">My Appointments</h2>
+            {appointments.length === 0 ? (
+              <p>No appointments scheduled.</p>
+            ) : (
+              <ul>
+                {appointments.map((appt) => (
+                  <li key={appt._id} className="border p-4 rounded-lg mb-2 flex justify-between items-center">
+                    <div>
+                      <p><strong>Patient:</strong> {appt.patientName}</p>
+                      <p><strong>Date:</strong> {appt.date}</p>
+                      <p><strong>Time:</strong> {appt.time}</p>
+                    </div>
+                    <button onClick={() => cancelAppointment(appt._id)} className="btn btn-secondary">
+                      Cancel
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        </main>
+        )}
+
+        {activeTab === "schedule" && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Manage My Schedule</h2>
+            <label className="block mb-2">Available Days</label>
+            <input type="text" className="input input-bordered w-full mb-4" value={schedule.availableDays.join(", ")} onChange={(e) => setSchedule({ ...schedule, availableDays: e.target.value.split(", ") })} />
+
+            <label className="block mb-2">Available Times</label>
+            <input type="text" className="input input-bordered w-full mb-4" value={schedule.availableTimes.join(", ")} onChange={(e) => setSchedule({ ...schedule, availableTimes: e.target.value.split(", ") })} />
+
+            <button onClick={updateSchedule} className="btn btn-primary w-full">Update Schedule</button>
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Profile Settings</h2>
+            <p><strong>Name:</strong> {user.name}</p>
+            <p><strong>Email:</strong> {user.email}</p>
+            <p><strong>Specialty:</strong> {user?.specialty}</p> {/* ✅ FIXED: `user?.specialty` */}
+          </div>
+        )}
       </div>
-    );
+    </div>
+  );
 }
