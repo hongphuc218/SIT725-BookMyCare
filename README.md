@@ -5,8 +5,8 @@ This project is a hospital booking system designed to simplify the appointment p
 
 ## Features
 - **Patient Features**: 
-  - Book, modify, and cancel appointments.
-  - Receive notifications via email.
+  - Book, modify, and cancel their appointments.
+  - Patients will receive notifications via email.
 - **Doctor Features**: 
   - View and manage schedules.
   - Access patient information.
