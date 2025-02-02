@@ -1,74 +1,106 @@
-import React, { useState } from 'react'
+import { useState } from "react";
+import { mockDoctors, mockAvailability } from "../data/mockData";
 
 export default function Booking() {
-    const [activeTab, setActiveTab] = useState('Location');
+  const [services] = useState([
+    "General Consultation", "Pediatrics", "Cardiology", 
+    "Dermatology", "Orthopedics", "Mental Health Counseling"
+  ]);
+  const [selectedService, setSelectedService] = useState("");
+  const [filteredDoctors, setFilteredDoctors] = useState(mockDoctors);
+  const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [selectedTime, setSelectedTime] = useState("");
 
-    // Tab content based on the active tab
-    const renderTabContent = () => {
-      switch (activeTab) {
-        case 'Location':
-          return <p className="text-secondary">Select your location here...</p>;
-        case 'Category':
-          return <p className="text-secondary">Choose a category...</p>;
-        case 'Service':
-          return <p className="text-secondary">Pick a service...</p>;
-        case 'Time':
-          return <p className="text-secondary">Select a time...</p>;
-        case 'Client Details':
-          return <p className="text-secondary">Fill in your details...</p>;
-        default:
-          return <p className="text-secondary">Select a tab to begin.</p>;
-      }
-    };
-  
-    return (
-      <main className="flex items-center justify-center h-custom">
-        {/* Booking Widget Container */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-3xl w-full relative">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-secondary">Booking Widget</h1>
-            <button className="text-secondary hover:text-primary">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-  
-          {/* Navigation Tabs */}
-          <div className="flex justify-between text-secondary text-sm mb-6">
-            {['Location', 'Category', 'Service', 'Time', 'Client Details'].map((tab) => (
-              <span
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`cursor-pointer pb-1 ${
-                  activeTab === tab
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'border-b-2 border-transparent hover:border-primary hover:text-primary'
-                }`}
-              >
-                {tab}
-              </span>
+  // Handle service selection and filter doctors
+  const handleServiceChange = (service: string) => {
+    setSelectedService(service);
+    const filtered = mockDoctors.filter((doc) => doc.specialty === service);
+    setFilteredDoctors(filtered);
+    setSelectedDoctor(""); // Reset doctor selection
+    setAvailableTimes([]); // Reset available times
+  };
+
+  // Handle doctor selection and show available times
+  const handleDoctorChange = (doctorId: string) => {
+    setSelectedDoctor(doctorId);
+    setAvailableTimes(mockAvailability[doctorId] || []);
+  };
+
+  const handleSubmit = () => {
+    if (!selectedService || !selectedDoctor || !selectedTime) {
+      alert("Please select all fields.");
+      return;
+    }
+    alert(`Appointment booked successfully with Doctor ${selectedDoctor} at ${selectedTime}`);
+  };
+
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="border border-accent bg-white shadow-lg rounded-lg p-8 max-w-lg w-full">
+        <h1 className="text-4xl font-bold text-center text-primary mb-8">Book an Appointment</h1>
+
+        {/* Select Service */}
+        <div className="mb-6">
+          <label className="block text-secondary mb-2">Choose a Service:</label>
+          <select 
+            className="select select-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
+            value={selectedService} 
+            onChange={(e) => handleServiceChange(e.target.value)}
+          >
+            <option value="">Select a service</option>
+            {services.map(service => (
+              <option key={service} value={service}>{service}</option>
             ))}
-          </div>
-  
-          {/* Dynamic Content */}
-          <div className="mt-6">
-            {renderTabContent()}
-          </div>
+          </select>
         </div>
-      </main>
-    );
-}
 
+        {/* Select Doctor */}
+        {selectedService && (
+          <div className="mb-6">
+            <label className="block text-secondary mb-2">Choose a Doctor:</label>
+            <select 
+              className="select select-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
+              value={selectedDoctor} 
+              onChange={(e) => handleDoctorChange(e.target.value)}
+            >
+              <option value="">Select a doctor</option>
+              {filteredDoctors.map(doctor => (
+                <option key={doctor._id} value={doctor._id}>
+                  {doctor.name} - {doctor.specialty}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Select Available Time */}
+        {selectedDoctor && (
+          <div className="mb-6">
+            <label className="block text-secondary mb-2">Choose an Available Time:</label>
+            <select 
+              className="select select-bordered w-full rounded-full border-secondary text-secondary placeholder-secondary"
+              value={selectedTime} 
+              onChange={(e) => setSelectedTime(e.target.value)}
+            >
+              <option value="">Select a time</option>
+              {availableTimes.map((time, index) => (
+                <option key={index} value={time}>{time}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <div className="flex justify-center">
+          <button 
+            className="btn btn-primary w-full mt-5 rounded-full text-lg"
+            onClick={handleSubmit}
+          >
+            Confirm Booking
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

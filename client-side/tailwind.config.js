@@ -8,7 +8,7 @@ module.exports = {
         'background': "url('./images/background.jpg')"
        },
        height: {
-        'custom': 'calc(100vh - 145px)',
+        'custom': 'calc(100vh - 100px)',
        }
     },
   },

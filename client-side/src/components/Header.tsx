@@ -19,10 +19,10 @@ export default function Header() {
         <a className="btn btn-ghost normal-case text-lg" href="/">
           Home
         </a>
-        <a className="btn btn-ghost normal-case text-lg" href="#">
+        <a className="btn btn-ghost normal-case text-lg" href="/doctors">
           Doctor
         </a>
-        <a className="btn btn-ghost normal-case text-lg" href="#">
+        <a className="btn btn-ghost normal-case text-lg" href="/services">
           Services
         </a>
         <a className="btn btn-ghost normal-case text-lg" href="#">
